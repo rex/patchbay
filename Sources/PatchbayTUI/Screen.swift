@@ -125,6 +125,8 @@ public enum Screen {
     guard suffixWidth > 0 else { return }
     if app.isSilent {
       canvas.put("⚠ none", row: row, column: width - 11, style: Style(color: 91, bold: true))
+    } else if app.isWaiting {
+      canvas.put("ready", row: row, column: width - 11, style: Style(color: color, dim: true))
     } else {
       canvas.put(meter(app.level), row: row, column: width - 11, style: Style(color: color))
     }

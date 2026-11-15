@@ -25,6 +25,12 @@ it. patchbay scales the audio itself, so this works on every output,
 including interfaces with no volume control of their own, and two apps on
 one device can sit at different levels.
 
+**Finder is always listed**, and its QuickLook previews count as Finder:
+anything macOS runs on an app's behalf (named like "QuickLookUIService
+(Finder)") joins that app. You can route Finder before it has played
+anything; its meter reads `ready`, and the route goes live the moment a
+preview starts. A route keeps up as an app's helper processes come and go.
+
 There are also scriptable forms:
 
 ```sh

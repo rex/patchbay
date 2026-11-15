@@ -30,6 +30,25 @@ version bumps).
 
 ---
 
+## [0.6.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- One permanent "Finder" source. Finder is pinned to the list even before
+  it touches audio, and QuickLook joins it: `com.apple.quicklook.*`, plus any
+  process macOS names "… (Finder)", such as the QLC previewer's extension.
+  More generally, a process named "X (App)" groups under App when App is
+  running (`AppNames.hostKey`, `AppGrouping.apps(host:pinned:)`).
+- Routes are now wishes (app → output) kept by `RouteBook`. A wish whose app
+  has no audio processes waits; its cable is drawn and its meter reads
+  `ready`. It goes live as soon as processes appear and rebuilds as they
+  change. It ends only on disconnect, when the app quits (unpinned apps), or
+  when its output goes away. Volume stays with the app.
+- `AudioProcess.onListChange` listens for the audio server's process list,
+  so a new QuickLook preview joins its route within milliseconds instead of
+  on the next 1-second refresh.
+
+### Changed
+- Controller hands route bookkeeping to `RouteBook`.
+
 ## [0.5.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - Per-route volume. Each route's level shows beside its meter (" 45%",

@@ -78,6 +78,16 @@ import Testing
     #expect(!row.contains("▯"))
   }
 
+  @Test func aWaitingRouteDrawsItsCableAndSaysReady() {
+    var state = TUIState()
+    state.update(
+      apps: [AppRow(key: "f", name: "Finder", isPlaying: false, routedUID: "spk", isWaiting: true)],
+      devices: [DeviceRow(uid: "spk", label: "Speakers")])
+    let text = Screen.render(state, width: 100, height: 10).canvas.text
+    #expect(text[3].contains("ready") && text[3].contains("100%") && text[3].contains("●"))
+    #expect(!text[3].contains("▯"))
+  }
+
   @Test func routedSourcesShowTheirVolumeOrMute() {
     var state = TUIState()
     state.update(

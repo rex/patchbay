@@ -32,6 +32,14 @@ public struct AudioProcess: Sendable, Hashable {
         isRunningOutput: running != 0)
     }
   }
+
+  /// Calls `handler` on `queue` whenever a process starts or stops using audio, so
+  /// a route can take in a new helper (a QuickLook preview, say) straight away
+  /// instead of on the next poll. For the life of the process.
+  public static func onListChange(queue: DispatchQueue, _ handler: @escaping @Sendable () -> Void) {
+    var address = HAL.address(kAudioHardwarePropertyProcessObjectList)
+    AudioObjectAddPropertyListenerBlock(HAL.system, &address, queue) { _, _ in handler() }
+  }
 }
 
 /// An app as a person thinks of it: Chrome, not "Google Chrome Helper (pid 812)".

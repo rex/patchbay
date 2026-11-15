@@ -10,13 +10,15 @@ public struct AppRow: Equatable, Sendable {
   /// The app is playing but its route has carried only silence for a while,
   /// usually because the terminal lacks the audio-recording permission.
   public let isSilent: Bool
+  /// Routed, but the app has no audio processes yet; the route starts when it plays.
+  public let isWaiting: Bool
   /// The route's volume, 0–100%, and whether it's muted. Shown only when routed.
   public let volume: Int
   public let isMuted: Bool
 
   public init(
     key: String, name: String, isPlaying: Bool, routedUID: String? = nil, level: Float = 0,
-    isSilent: Bool = false, volume: Int = 100, isMuted: Bool = false
+    isSilent: Bool = false, isWaiting: Bool = false, volume: Int = 100, isMuted: Bool = false
   ) {
     self.key = key
     self.name = name
@@ -24,6 +26,7 @@ public struct AppRow: Equatable, Sendable {
     self.routedUID = routedUID
     self.level = level
     self.isSilent = isSilent
+    self.isWaiting = isWaiting
     self.volume = volume
     self.isMuted = isMuted
   }

@@ -31,6 +31,27 @@ public enum AppNames {
       .contains { $0.activationPolicy == .regular }
   }
 
+  /// The app a process works for, when macOS names it that way: extensions and
+  /// services it runs on an app's behalf are called "QLC quicklook (Finder)",
+  /// "QuickLookUIService (Mail)". Returns that app's bundle ID if it is running.
+  public static func hostKey(for process: AudioProcess) -> String? {
+    guard let name = NSRunningApplication(processIdentifier: process.pid)?.localizedName,
+      let host = hostName(fromDisplayName: name)
+    else { return nil }
+    return NSWorkspace.shared.runningApplications.first {
+      $0.activationPolicy == .regular && $0.localizedName == host
+    }?.bundleIdentifier
+  }
+
+  /// "QLC quicklook (Finder)" → "Finder". Nil when the name ends in no parentheses.
+  public static func hostName(fromDisplayName name: String) -> String? {
+    guard name.hasSuffix(")"), let open = name.lastIndex(of: "("), open > name.startIndex else {
+      return nil
+    }
+    let host = name[name.index(after: open)..<name.index(before: name.endIndex)]
+    return host.isEmpty ? nil : String(host)
+  }
+
   /// `afplay`, `say` and other bundle-less tools: the executable's short name.
   static func executableName(pid: pid_t) -> String? {
     var buffer = [CChar](repeating: 0, count: 256)
