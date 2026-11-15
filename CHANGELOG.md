@@ -30,6 +30,12 @@ version bumps).
 
 ---
 
+## [0.6.1] — 2026-11-15 — Agent: Claude Opus 5.5
+### Changed
+- TASK_STATE.md: new standing directive from Pierce to work directly on
+  `main`, with no branches or PRs. Phase 3 (silent-route warning, volume,
+  Finder source) is recorded as done, and nothing is queued.
+
 ## [0.6.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - One permanent "Finder" source. Finder is pinned to the list even before

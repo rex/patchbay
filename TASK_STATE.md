@@ -9,11 +9,13 @@
 ## 0. TL;DR for a fresh agent session
 
 `patchbay` opens the patch panel: sources left, outputs right, click one then
-the other and a cable is drawn. v1 works for real (Pierce, 2026-11-15). **Next:**
-the silent-route warning (#8), then per-route volume (#9). Never add an event tap.
+the other and a cable is drawn. Per-route volume, the silent-route warning and
+a permanent Finder source (with QuickLook) have all shipped. **Next:** whatever
+Pierce asks for; nothing is queued. Never add an event tap.
 
 ## Standing user directives
 
+- Work directly on `main`: no feature branches, no PRs. Keep every gate, and push each commit (Pierce, 2026-11-15).
 - It has to be a TUI: nobody should have to remember device names (Pierce, 2026-11-15).
 - Public repo: no secrets land in it (Pierce, 2026-11-15).
 - Don't copy jkjoplin/AudioRouter code; it has no license.
@@ -25,6 +27,7 @@ the silent-route warning (#8), then per-route volume (#9). Never add an event ta
 | 0 | Name, repo, scaffold, Rivendell (#2, #3) | ✅ done | rex/patchbay public, gates green, issues on the board |
 | 1 | Routing engine (#4) | ✅ done | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
 | 2 | TUI (#5) | ✅ done | Live app and device lists; add, retarget and remove routes; quitting restores everything |
+| 3 | Daily-use polish (#8, #9, #11) | ✅ done | Silent routes explain themselves; per-route volume and mute; Finder always listed and QuickLook folded in |
 
 Parent issue: #1. Issues #1–#5 came over from rex/todo#16–#20.
 
@@ -60,8 +63,8 @@ Statuses: `⏸ pending` · `🟡 in-prog` · `✅ done` · `🔴 blocked`
 
 ## 5. Next actions (ordered)
 
-1. Silent-route warning (#8).
-2. Per-route volume as software gain, so it works on every device (#9).
+1. Nothing queued. Still untried by hand: AirPods as a destination, and a
+   Finder route waiting with no audio processes until a QuickLook preview starts.
 
 ## 6. Handoff note
 
