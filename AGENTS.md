@@ -5,7 +5,7 @@
 
 ## 1. Project snapshot
 - **What**: a terminal UI that routes each Mac app's audio to an output device picked from a live list.
-- **Runtime**: Swift 6 (language mode 6, strict concurrency), SwiftPM, macOS 14.2+; Core Audio process taps (`CATapDescription`, `AudioHardwareCreateProcessTap`) plus private aggregate devices.
+- **Runtime**: Swift 6 (language mode 6, strict concurrency), SwiftPM, macOS 15+; Core Audio process taps (`CATapDescription`, `AudioHardwareCreateProcessTap`), a tap-only private aggregate, a lock-free ring, and an output-only AUHAL per route.
 - **Infra**: none. A local binary; CI is GitHub Actions on macOS.
 - **Owner**: Pierce. Work is tracked in Rivendell (rex/patchbay issues).
 - **Non-goals**: no menu-bar app, no per-app volume/EQ, no system-wide hotkeys, no daemon or login item.
@@ -75,7 +75,17 @@ change gets a corresponding test update.
 
 <!-- Update whenever an agent makes the same mistake twice. Start empty. -->
 
-- (none yet)
+- Don't put the destination device inside the route's aggregate. That puts its
+  inputs on the aggregate's input side, where a headset mic may open (AirPods
+  would drop to call quality). The aggregate holds only the tap; an output-only
+  AUHAL, which never opens input, plays the ring buffer.
+- `kAudioProcessPropertyDevices` (input scope) lists every device a process
+  touches, playback-only ones included. It cannot tell you whether a mic is open.
+- In an aggregate's input buffer list, the tap's channels come last, after any
+  sub-device inputs. Marking a stream unused in `IOProcStreamUsage` zero-fills
+  its buffer; `mData` is still non-nil.
+- A tap-only aggregate runs on its own clock, so the ring trims to `target`
+  frames when the writer runs ahead and re-primes after an underrun.
 
 ## 10. Workflow
 

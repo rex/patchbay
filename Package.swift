@@ -3,11 +3,14 @@ import PackageDescription
 
 let package = Package(
   name: "patchbay",
-  platforms: [.macOS("14.2")],
+  // Process taps need 14.2; the lock-free ring buffer's Atomic needs 15.
+  platforms: [.macOS(.v15)],
   products: [
     .executable(name: "patchbay", targets: ["patchbay"])
   ],
   targets: [
-    .executableTarget(name: "patchbay")
+    .target(name: "PatchbayCore"),
+    .executableTarget(name: "patchbay", dependencies: ["PatchbayCore"]),
+    .testTarget(name: "PatchbayCoreTests", dependencies: ["PatchbayCore"]),
   ]
 )

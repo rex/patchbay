@@ -8,10 +8,10 @@
 
 ## 0. TL;DR for a fresh agent session
 
-The repo is scaffolded and linked to Rivendell. **Next action: the routing
-engine (Phase 1)**: list apps that are playing audio and the output devices,
-and route one app to one device. The TUI (Phase 2) sits on top of it. Never
-add an event tap.
+The routing engine works from the command line (`patchbay list`,
+`patchbay route <app> <device>`). **Next action:** Pierce listen-tests a route
+(pitch, glitches, AirPods staying in high quality), then the TUI (Phase 2,
+#5) goes on top. Never add an event tap.
 
 ## Standing user directives
 
@@ -24,7 +24,7 @@ add an event tap.
 | # | Phase | Status | Exit criteria |
 |---|---|---|---|
 | 0 | Name, repo, scaffold, Rivendell (#2, #3) | ✅ done | rex/patchbay public, gates green, issues on the board |
-| 1 | Routing engine (#4) | ⏸ pending | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
+| 1 | Routing engine (#4) | 🟡 in-prog: built, awaiting listen test | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
 | 2 | TUI (#5) | ⏸ pending | Live app and device lists; add, retarget and remove routes; quitting restores everything |
 
 Parent issue: #1. Issues #1–#5 came over from rex/todo#16–#20.
@@ -33,19 +33,21 @@ Statuses: `⏸ pending` · `🟡 in-prog` · `✅ done` · `🔴 blocked`
 
 ## 2. Slices
 
-### Slice 1.1 — Discovery: audio apps and output devices
+### Slice 1.1 — Discovery: audio apps and output devices ✅
 
 - Acceptance:
-  - [ ] When asked, the engine shall list processes whose output is running, with PID and bundle ID, grouping helper processes under their app.
-  - [ ] When asked, the engine shall list output devices with their names, UIDs and nominal sample rates, and mark the default.
-  - [ ] Tests: the pure grouping and naming logic, without Core Audio.
+  - [x] When asked, the engine shall list processes whose output is running, with PID and bundle ID, grouping helper processes under their app.
+  - [x] When asked, the engine shall list output devices with their names, UIDs and nominal sample rates, and mark the default.
+  - [x] Tests: the pure grouping logic, without Core Audio.
 
-### Slice 1.2 — Route one app to one device
+### Slice 1.2 — Route one app to one device 🟡
 
 - Acceptance:
-  - [ ] When a route starts, the app's audio shall play only on the chosen device.
-  - [ ] If the tap and the device run at different sample rates, the audio shall still play at the right pitch and speed.
-  - [ ] When patchbay exits, every tap and aggregate it created shall be destroyed.
+  - [x] When a route starts, the app's audio shall reach the chosen device (measured: peak flows through the ring into the output unit).
+  - [ ] If the tap and the device run at different sample rates, the audio shall still play at the right pitch and speed. (48→44.1 kHz flows; pitch needs ears.)
+  - [x] When patchbay exits, every tap and aggregate it created shall be destroyed (`Route.stop`, plus macOS cleanup of private objects).
+  - [ ] Two routes at once (the engine allows it; the CLI routes one).
+  - [ ] AirPods stay in high-quality mode while routed to (needs AirPods).
 
 ## 3. Blockers / open questions
 
@@ -58,10 +60,12 @@ Statuses: `⏸ pending` · `🟡 in-prog` · `✅ done` · `🔴 blocked`
 
 ## 5. Next actions (ordered)
 
-1. Slice 1.1, discovery.
-2. Slice 1.2, routing, listen-tested on real devices.
-3. Phase 2, the TUI.
+1. Pierce: `swift run patchbay route chrome LG` (or AirPods) and listen.
+2. Phase 2, the TUI (#5), which also exercises several routes at once.
 
 ## 6. Handoff note
 
-2026-11-15: repo created and scaffolded; engine work starts next.
+2026-11-15: engine built and measured on this Mac (Scarlett 44.1 kHz,
+BlackHole 48 kHz). The first design (destination inside the aggregate) was
+dropped for the tap-only aggregate + ring + output-only AUHAL; AGENTS.md §9
+says why.

@@ -78,8 +78,10 @@ quality_gates:
   tests:
     # required = active gate; deferred = intentionally not yet;
     # not_applicable = work where tests don't apply (docs repos, etc.)
-    mode: deferred
-    command:
+    # Swift Testing via `swift test`. Covers the pure logic (app grouping, the
+    # ring buffer); routing itself needs a live tap and a listening human.
+    mode: required
+    command: make test
     required_suites: []
     coverage:
       enabled: false

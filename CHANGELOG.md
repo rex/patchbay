@@ -30,6 +30,26 @@ version bumps).
 
 ---
 
+## [0.2.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- `PatchbayCore`, the routing engine. `OutputDevice.all()` lists output
+  devices (default first, aggregates hidden). `AudioProcess.all()` and
+  `AppGrouping` list the apps registered with the audio server, with browser
+  and Electron helpers grouped under their app. `Route` sends one app to one
+  device.
+- A route is a muting process tap, then a private tap-only aggregate whose
+  IOProc fills a lock-free SPSC `RingBuffer`, then an output-only AUHAL on
+  the destination that converts the sample rate. Tested on this Mac: a 48 kHz
+  tap into the 44.1 kHz Scarlett and into 48 kHz BlackHole, with audio
+  flowing and the buffer steady at 300–950 frames over 12 seconds.
+- `patchbay list` and `patchbay route <app> <device> [seconds]`.
+- Swift Testing suites for app grouping, HAL error codes and the ring buffer
+  (priming, underrun, trimming a fast writer, overflow, tap channel offset).
+
+### Changed
+- Tests are now a required gate (`VIBE.yaml`, `make test` runs `swift test`).
+- The minimum is macOS 15, for `Synchronization.Atomic` in the ring buffer.
+
 ## [0.1.1] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Changed
 - TASK_STATE.md maps each phase to its issue (#1–#5, moved here from
