@@ -1,17 +1,29 @@
 import AudioToolbox
 import CoreAudio
 
-/// An output-only HAL audio unit on one device, playing whatever a `RingBuffer` holds.
+/// What the render callback needs, behind its one `refCon` pointer.
+private final class RenderContext {
+  let ring: RingBuffer
+  let volume: Volume
+  init(ring: RingBuffer, volume: Volume) {
+    self.ring = ring
+    self.volume = volume
+  }
+}
+
+/// An output-only HAL audio unit on one device, playing whatever a `RingBuffer`
+/// holds at the route's `Volume`.
 ///
 /// Output-only matters: it never opens the device's input, so AirPods stay in
 /// high-quality playback mode instead of dropping to their call-quality headset
 /// profile. The unit also converts from the ring's sample rate to the device's.
 final class OutputUnit {
   private var unit: AudioUnit?
-  private let ring: RingBuffer
+  private let context: RenderContext
+  private var ring: RingBuffer { context.ring }
 
-  init(device: AudioDeviceID, sampleRate: Double, ring: RingBuffer) throws {
-    self.ring = ring
+  init(device: AudioDeviceID, sampleRate: Double, ring: RingBuffer, volume: Volume) throws {
+    context = RenderContext(ring: ring, volume: volume)
     var description = AudioComponentDescription(
       componentType: kAudioUnitType_Output, componentSubType: kAudioUnitSubType_HALOutput,
       componentManufacturer: kAudioUnitManufacturer_Apple, componentFlags: 0,
@@ -53,13 +65,15 @@ final class OutputUnit {
 
     var callback = AURenderCallbackStruct(
       inputProc: { refCon, _, _, _, frames, data in
-        let ring = Unmanaged<RingBuffer>.fromOpaque(refCon).takeUnretainedValue()
-        if let buffer = data?.pointee.mBuffers, let samples = buffer.mData {
-          ring.read(into: samples.assumingMemoryBound(to: Float32.self), frames: Int(frames))
+        let context = Unmanaged<RenderContext>.fromOpaque(refCon).takeUnretainedValue()
+        if let buffer = data?.pointee.mBuffers, let raw = buffer.mData {
+          let samples = raw.assumingMemoryBound(to: Float32.self)
+          context.ring.read(into: samples, frames: Int(frames))
+          context.volume.apply(to: samples, frames: Int(frames), channels: context.ring.channels)
         }
         return noErr
       },
-      inputProcRefCon: Unmanaged.passUnretained(ring).toOpaque())
+      inputProcRefCon: Unmanaged.passUnretained(context).toOpaque())
     try HAL.check(
       AudioUnitSetProperty(
         unit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Input, 0, &callback,

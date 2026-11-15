@@ -20,6 +20,9 @@ public final class Route {
   public let device: OutputDevice
   /// Live counters, written by the IO thread. For diagnostics, not for logic.
   public let stats = RouteStats()
+  /// This route's level. Pass the old route's `volume` when rebuilding one so the
+  /// setting survives.
+  public let volume: Volume
 
   private var tapID = AudioObjectID(kAudioObjectUnknown)
   private var aggregateID = AudioObjectID(kAudioObjectUnknown)
@@ -27,9 +30,10 @@ public final class Route {
   private var ring: RingBuffer?
   private var output: OutputUnit?
 
-  public init(app: AudioApp, device: OutputDevice) throws {
+  public init(app: AudioApp, device: OutputDevice, volume: Volume = Volume()) throws {
     self.app = app
     self.device = device
+    self.volume = volume
     do { try start() } catch {
       stop()
       throw error
@@ -57,7 +61,8 @@ public final class Route {
     let format = try tapFormat()
     let ring = RingBuffer(channels: Int(format.mChannelsPerFrame))
     self.ring = ring
-    output = try OutputUnit(device: device.id, sampleRate: format.mSampleRate, ring: ring)
+    output = try OutputUnit(
+      device: device.id, sampleRate: format.mSampleRate, ring: ring, volume: volume)
 
     let aggregate: [String: Any] = [
       kAudioAggregateDeviceNameKey: description.name,

@@ -22,8 +22,11 @@ import Testing
     #expect(Key.parse(Array("\u{1B}[<2;12;5M".utf8)).isEmpty)
   }
 
-  @Test func scrollWheelMovesTheCursor() {
-    #expect(Key.parse(Array("\u{1B}[<64;1;1M\u{1B}[<65;1;1M".utf8)) == [.up, .down])
+  @Test func scrollWheelKeepsWhereItHappened() {
+    #expect(
+      Key.parse(Array("\u{1B}[<64;3;2M\u{1B}[<65;3;2M".utf8)) == [
+        .scroll(x: 2, y: 1, delta: -1), .scroll(x: 2, y: 1, delta: 1),
+      ])
   }
 
   @Test func aClickAndAKeyInOneRead() {

@@ -10,6 +10,8 @@ public enum Key: Equatable, Sendable {
   case character(Character)
   /// Left-button press at a 0-based column and row.
   case click(x: Int, y: Int)
+  /// Scroll wheel at a 0-based column and row: -1 is up (away), +1 is down.
+  case scroll(x: Int, y: Int, delta: Int)
 
   /// Decodes one read from the terminal; one read can hold several events.
   public static func parse(_ bytes: [UInt8]) -> [Key] {
@@ -54,8 +56,8 @@ public enum Key: Equatable, Sendable {
     guard fields.count == 3, bytes[end] == 0x4D else { return (nil, length) }  // press only
     switch fields[0] {
     case 0: return (.click(x: fields[1] - 1, y: fields[2] - 1), length)
-    case 64: return (.up, length)  // scroll wheel
-    case 65: return (.down, length)
+    case 64: return (.scroll(x: fields[1] - 1, y: fields[2] - 1, delta: -1), length)
+    case 65: return (.scroll(x: fields[1] - 1, y: fields[2] - 1, delta: 1), length)
     default: return (nil, length)
     }
   }

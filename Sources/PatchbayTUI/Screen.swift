@@ -104,7 +104,7 @@ public enum Screen {
   static func header(_ state: TUIState, on canvas: inout Canvas, rightStart: Int) {
     canvas.put("patchbay", row: 0, column: 1, style: Style(bold: true))
     let help =
-      "click a source, then an output · ↑↓←→ ⏎ · d disconnect · a "
+      "click a source, then an output · ↑↓←→ ⏎ · +/- volume · m mute · d disconnect · a "
       + (state.showAll ? "fewer apps" : "all apps") + " · q quit"
     canvas.put(
       help, row: 0, column: max(11, canvas.width - help.count - 1), style: Style(dim: true))
@@ -118,15 +118,26 @@ public enum Screen {
     _ app: AppRow, row: Int, width: Int, color: UInt8?, armed: Bool, on canvas: inout Canvas
   ) {
     if app.isPlaying { canvas.put("▶", row: row, column: 1, style: Style(color: 32)) }
-    let meterWidth = app.routedUID == nil ? 0 : 6
+    // A routed source ends with "▮▮▯▯▯ 100% ": its level meter, then its volume.
+    let suffixWidth = app.routedUID == nil ? 0 : 11
     let style = Style(color: armed ? armedColor : color, bold: armed || color != nil)
-    canvas.put(app.name, row: row, column: 3, limit: width - 4 - meterWidth, style: style)
-    if meterWidth > 0, app.isSilent {
-      canvas.put(
-        "⚠ none", row: row, column: width - meterWidth, style: Style(color: 91, bold: true))
-    } else if meterWidth > 0 {
-      canvas.put(meter(app.level), row: row, column: width - meterWidth, style: Style(color: color))
+    canvas.put(app.name, row: row, column: 3, limit: width - 4 - suffixWidth, style: style)
+    guard suffixWidth > 0 else { return }
+    if app.isSilent {
+      canvas.put("⚠ none", row: row, column: width - 11, style: Style(color: 91, bold: true))
+    } else {
+      canvas.put(meter(app.level), row: row, column: width - 11, style: Style(color: color))
     }
+    canvas.put(
+      volumeLabel(app), row: row, column: width - 5,
+      style: app.isMuted ? Style(color: 91) : Style(color: color, bold: app.volume < 100))
+  }
+
+  /// " 45%", "100%", or "mute": always four characters.
+  static func volumeLabel(_ app: AppRow) -> String {
+    if app.isMuted { return "mute" }
+    let percent = "\(app.volume)%"
+    return String(repeating: " ", count: max(4 - percent.count, 0)) + percent
   }
 
   static func drawOutput(

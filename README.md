@@ -19,6 +19,12 @@ keyboard does everything too: ↑↓ to move, ⏎ to pick, Esc to cancel, `a` to
 every app instead of just the playing ones and real apps, `q` to quit. Quitting
 disconnects everything. Clicks reach patchbay only from its own terminal window.
 
+Each route has its own volume, shown beside its meter. Select a routed app
+and press `+`/`-` (5% steps) or `m` to mute, or scroll the mouse wheel over
+it. patchbay scales the audio itself, so this works on every output,
+including interfaces with no volume control of their own, and two apps on
+one device can sit at different levels.
+
 There are also scriptable forms:
 
 ```sh

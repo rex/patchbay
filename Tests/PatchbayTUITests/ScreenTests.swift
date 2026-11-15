@@ -78,6 +78,21 @@ import Testing
     #expect(!row.contains("▯"))
   }
 
+  @Test func routedSourcesShowTheirVolumeOrMute() {
+    var state = TUIState()
+    state.update(
+      apps: [
+        AppRow(key: "a", name: "Chrome", isPlaying: true, routedUID: "spk", volume: 45),
+        AppRow(key: "b", name: "Finder", isPlaying: true, routedUID: "spk", isMuted: true),
+        AppRow(key: "c", name: "Music", isPlaying: true, routedUID: "spk"),
+      ],
+      devices: [DeviceRow(uid: "spk", label: "Speakers")])
+    let text = Screen.render(state, width: 100, height: 10).canvas.text
+    #expect(text[3].contains("▯  45%"))  // right-aligned in four columns
+    #expect(text[4].contains("▯ mute"))
+    #expect(text[5].contains("▯ 100%"))
+  }
+
   @Test func longNamesAreCutWithAnEllipsis() {
     var canvas = Canvas(width: 10, height: 1)
     canvas.put("A very long app name", row: 0, column: 0, limit: 6)

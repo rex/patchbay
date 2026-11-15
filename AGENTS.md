@@ -8,7 +8,7 @@
 - **Runtime**: Swift 6 (language mode 6, strict concurrency), SwiftPM, macOS 15+; Core Audio process taps (`CATapDescription`, `AudioHardwareCreateProcessTap`), a tap-only private aggregate, a lock-free ring, and an output-only AUHAL per route.
 - **Infra**: none. A local binary; CI is GitHub Actions on macOS.
 - **Owner**: Pierce. Work is tracked in Rivendell (rex/patchbay issues).
-- **Non-goals**: no menu-bar app, no per-app volume/EQ, no system-wide hotkeys, no daemon or login item.
+- **Non-goals**: no menu-bar app, no EQ or effects, no system-wide hotkeys, no daemon or login item. (Per-route volume is in, as software gain: #9.)
 
 ## 2. Setup
 

@@ -10,10 +10,13 @@ public struct AppRow: Equatable, Sendable {
   /// The app is playing but its route has carried only silence for a while,
   /// usually because the terminal lacks the audio-recording permission.
   public let isSilent: Bool
+  /// The route's volume, 0–100%, and whether it's muted. Shown only when routed.
+  public let volume: Int
+  public let isMuted: Bool
 
   public init(
     key: String, name: String, isPlaying: Bool, routedUID: String? = nil, level: Float = 0,
-    isSilent: Bool = false
+    isSilent: Bool = false, volume: Int = 100, isMuted: Bool = false
   ) {
     self.key = key
     self.name = name
@@ -21,6 +24,8 @@ public struct AppRow: Equatable, Sendable {
     self.routedUID = routedUID
     self.level = level
     self.isSilent = isSilent
+    self.volume = volume
+    self.isMuted = isMuted
   }
 }
 
@@ -42,6 +47,9 @@ public struct DeviceRow: Equatable, Sendable {
 public enum Command: Equatable, Sendable {
   case route(appKey: String, deviceUID: String)
   case unroute(appKey: String)
+  /// Change a routed app's volume by `step` percentage points (±5 per keypress).
+  case volume(appKey: String, step: Int)
+  case toggleMute(appKey: String)
   case toggleAll
   case quit
 }
@@ -99,12 +107,25 @@ public struct TUIState: Equatable, Sendable {
     case .right, .character("l"): if focus == .sources { return pickSource(sourceIndex) }
     case .enter, .character(" "):
       return focus == .sources ? pickSource(sourceIndex) : pickOutput(outputIndex)
+    case .scroll(_, _, let delta): move(by: delta)
     case .backspace, .character("d"):
-      guard focus == .sources, let app = selectedApp, app.routedUID != nil else { return nil }
-      return .unroute(appKey: app.key)
+      return routedSelection.map { .unroute(appKey: $0) }
+    case .character("+"), .character("="):
+      return routedSelection.map { .volume(appKey: $0, step: 5) }
+    case .character("-"), .character("_"):
+      return routedSelection.map { .volume(appKey: $0, step: -5) }
+    case .character("m"):
+      return routedSelection.map { .toggleMute(appKey: $0) }
     default: break
     }
     return nil
+  }
+
+  /// The selected source's key, when the cursor is on the left and it's routed.
+  /// Disconnect, volume and mute all act on it.
+  private var routedSelection: String? {
+    guard focus == .sources, let app = selectedApp, app.routedUID != nil else { return nil }
+    return app.key
   }
 
   /// Arms a source and moves to the outputs, cursor on where it plays now.

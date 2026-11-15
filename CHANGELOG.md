@@ -30,6 +30,23 @@ version bumps).
 
 ---
 
+## [0.5.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- Per-route volume. Each route's level shows beside its meter (" 45%",
+  "100%", "mute"). `+`/`=` and `-`/`_` step it by 5%, `m` mutes, and the
+  scroll wheel over a routed source turns it (anywhere else the wheel still
+  moves the cursor). Changing the level unmutes.
+- `Volume`: software gain applied in the output unit's render callback, so
+  it works on every device, the Scarlett included. It uses a squared curve
+  so 50% sounds about half as loud, and ramps across one buffer so changes
+  don't click. Lock-free and allocation-free on the render thread. A rebuilt
+  or re-pointed route keeps its app's volume for the session.
+
+### Changed
+- `Key.scroll(x:y:delta:)` replaces the wheel's plain up/down, so a scroll
+  knows where it happened.
+- AGENTS.md no longer lists per-app volume as a non-goal.
+
 ## [0.4.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - Silent-route warning. When a playing app's route has carried only exact

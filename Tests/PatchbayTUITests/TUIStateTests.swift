@@ -99,4 +99,22 @@ private func panel(_ apps: [AppRow] = [chrome, finder]) -> TUIState {
     #expect(state.showAll)
     #expect(state.handle(.quit) == .quit)
   }
+
+  @Test func volumeAndMuteKeysActOnARoutedSource() {
+    let routed = AppRow(key: chrome.key, name: chrome.name, isPlaying: true, routedUID: "spk")
+    var state = panel([routed, finder])
+    #expect(state.handle(.character("+")) == .volume(appKey: chrome.key, step: 5))
+    #expect(state.handle(.character("=")) == .volume(appKey: chrome.key, step: 5))
+    #expect(state.handle(.character("-")) == .volume(appKey: chrome.key, step: -5))
+    #expect(state.handle(.character("m")) == .toggleMute(appKey: chrome.key))
+    _ = state.handle(.down)  // Finder isn't routed: nothing to adjust
+    #expect(state.handle(.character("+")) == nil)
+    #expect(state.handle(.character("m")) == nil)
+  }
+
+  @Test func scrollingWhereNothingIsRoutedMovesTheCursor() {
+    var state = panel()
+    _ = state.handle(.scroll(x: 0, y: 0, delta: 1))
+    #expect(state.sourceIndex == 1)
+  }
 }

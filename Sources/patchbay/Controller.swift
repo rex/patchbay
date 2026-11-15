@@ -18,6 +18,8 @@ final class Controller {
   /// Per route: last second's peak, and whether it has gone suspiciously silent.
   private var levels: [String: Float] = [:]
   private var watches: [String: SilenceWatch] = [:]
+  /// Each app's volume, kept for the session so rerouting it keeps its level.
+  private var volumes: [String: Volume] = [:]
   /// The terminal app whose audio-recording permission the taps depend on.
   private let host = HostApp.name()
 
@@ -60,19 +62,49 @@ final class Controller {
       case .toggleAll: refresh()
       case .route(let appKey, let uid): route(appKey, to: uid)
       case .unroute(let appKey): unroute(appKey, reason: "is back on its normal output")
+      case .volume(let appKey, let step): changeVolume(appKey, by: step)
+      case .toggleMute(let appKey): toggleMute(appKey)
       }
     }
     draw()
   }
 
-  /// Clicks go to whatever was drawn under them; everything else to the state.
+  /// Clicks go to whatever was drawn under them. The scroll wheel over a routed
+  /// source turns its volume; anywhere else it moves the cursor.
   private func command(for key: Key) -> Command? {
-    guard case .click(let x, let y) = key else { return state.handle(key) }
-    switch frame?.target(x: x, y: y) {
-    case .source(let index): return state.pickSource(index)
-    case .output(let index): return state.pickOutput(index)
-    case nil: return nil
+    switch key {
+    case .click(let x, let y):
+      switch frame?.target(x: x, y: y) {
+      case .source(let index): return state.pickSource(index)
+      case .output(let index): return state.pickOutput(index)
+      case nil: return nil
+      }
+    case .scroll(let x, let y, let delta):
+      if case .source(let index)? = frame?.target(x: x, y: y), state.apps.indices.contains(index),
+        state.apps[index].routedUID != nil
+      {
+        return .volume(appKey: state.apps[index].key, step: -5 * delta)
+      }
+      return state.handle(key)
+    default:
+      return state.handle(key)
     }
+  }
+
+  /// Nudges a route's volume. Changing the level also unmutes it.
+  private func changeVolume(_ appKey: String, by step: Int) {
+    guard let route = routes[appKey] else { return }
+    route.volume.set(perMille: route.volume.perMille + step * 10)
+    route.volume.setMuted(false)
+    state.status = "\(route.app.name): \(route.volume.perMille / 10)%"
+    refresh()
+  }
+
+  private func toggleMute(_ appKey: String) {
+    guard let route = routes[appKey] else { return }
+    route.volume.setMuted(!route.volume.isMuted)
+    state.status = "\(route.app.name) \(route.volume.isMuted ? "muted" : "unmuted")"
+    refresh()
   }
 
   private func route(_ appKey: String, to uid: String) {
@@ -82,7 +114,9 @@ final class Controller {
     routes.removeValue(forKey: appKey)?.stop()
     watches[appKey] = nil
     do {
-      routes[appKey] = try Route(app: app, device: device)
+      let volume = volumes[appKey] ?? Volume()
+      volumes[appKey] = volume
+      routes[appKey] = try Route(app: app, device: device, volume: volume)
       state.status = "\(app.name) → \(device.name)"
     } catch {
       state.status = "Couldn't route \(app.name): \(error)"
@@ -117,7 +151,9 @@ final class Controller {
       AppRow(
         key: app.key, name: app.name, isPlaying: app.isPlaying,
         routedUID: routes[app.key]?.device.uid, level: levels[app.key] ?? 0,
-        isSilent: watches[app.key]?.isSilent ?? false)
+        isSilent: watches[app.key]?.isSilent ?? false,
+        volume: (routes[app.key]?.volume.perMille ?? Volume.full) / 10,
+        isMuted: routes[app.key]?.volume.isMuted ?? false)
     }
     let deviceRows = zip(devices, DeviceLabels.labels(for: devices)).map { device, label in
       DeviceRow(uid: device.uid, label: label, detail: DeviceLabels.detail(for: device))
@@ -144,7 +180,7 @@ final class Controller {
       if before != Set(app.processes.map(\.objectID)) {
         route.stop()
         watches[key] = nil
-        routes[key] = try? Route(app: app, device: route.device)
+        routes[key] = try? Route(app: app, device: route.device, volume: route.volume)
       }
     }
   }
