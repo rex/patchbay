@@ -7,9 +7,9 @@
 
 | Target | Purpose | Entry point |
 |---|---|---|
-| `PatchbayCore` | Routing engine: discovery, taps, ring buffer, output units | `Route.swift` |
+| `PatchbayCore` | Routing engine: discovery, taps, ring buffer, output units, volume; `RouteBook` (wishes vs live routes) and `RouteMemory` (routes.json) | `Route.swift`, `RouteBook.swift` |
 | `PatchbayTUI` | Pure patch-panel logic: keys and clicks, state, layout, cables | `TUIState.swift`, `Screen.swift` |
-| `patchbay` (executable) | Terminal I/O and route lifecycle for the TUI, plus `list` / `route` | `main.swift`, `Controller.swift` |
+| `patchbay` (executable) | Terminal I/O and the refresh loop for the TUI, plus `list` / `route` | `main.swift`, `Controller.swift` |
 
 `PatchbayTUI` has no Core Audio or terminal calls, so its tests render whole
 screens and drive clicks without permissions. The executable is the only place

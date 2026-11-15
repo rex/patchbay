@@ -88,6 +88,19 @@ import Testing
     #expect(!text[3].contains("▯"))
   }
 
+  @Test func aRouteToAnOutputThatIsAwaySaysSo() {
+    var state = TUIState()
+    state.update(
+      apps: [
+        AppRow(
+          key: "f", name: "Finder", isPlaying: false, routedUID: "pods", isWaiting: true,
+          isAway: true)
+      ],
+      devices: [DeviceRow(uid: "spk", label: "Speakers")])
+    let row = Screen.render(state, width: 100, height: 10).canvas.text[3]
+    #expect(row.contains("away") && !row.contains("ready"))
+  }
+
   @Test func routedSourcesShowTheirVolumeOrMute() {
     var state = TUIState()
     state.update(

@@ -12,13 +12,17 @@ public struct AppRow: Equatable, Sendable {
   public let isSilent: Bool
   /// Routed, but the app has no audio processes yet; the route starts when it plays.
   public let isWaiting: Bool
+  /// Routed to an output that isn't connected right now (AirPods in their case);
+  /// the app plays normally until it comes back.
+  public let isAway: Bool
   /// The route's volume, 0–100%, and whether it's muted. Shown only when routed.
   public let volume: Int
   public let isMuted: Bool
 
   public init(
     key: String, name: String, isPlaying: Bool, routedUID: String? = nil, level: Float = 0,
-    isSilent: Bool = false, isWaiting: Bool = false, volume: Int = 100, isMuted: Bool = false
+    isSilent: Bool = false, isWaiting: Bool = false, isAway: Bool = false, volume: Int = 100,
+    isMuted: Bool = false
   ) {
     self.key = key
     self.name = name
@@ -27,6 +31,7 @@ public struct AppRow: Equatable, Sendable {
     self.level = level
     self.isSilent = isSilent
     self.isWaiting = isWaiting
+    self.isAway = isAway
     self.volume = volume
     self.isMuted = isMuted
   }

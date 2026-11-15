@@ -22,6 +22,7 @@ final class Controller {
 
   func run() throws -> Never {
     try terminal.enter()
+    book.restore(RouteMemory.load())
     refresh()
     draw()
 
@@ -101,6 +102,7 @@ final class Controller {
     volume.set(perMille: volume.perMille + step * 10)
     volume.setMuted(false)
     state.status = "\(name(of: appKey)): \(volume.perMille / 10)%"
+    save()
     refresh()
   }
 
@@ -109,13 +111,22 @@ final class Controller {
     let volume = book.volume(for: appKey)
     volume.setMuted(!volume.isMuted)
     state.status = "\(name(of: appKey)) \(volume.isMuted ? "muted" : "unmuted")"
+    save()
     refresh()
+  }
+
+  /// Writes every route to disk so the next launch brings them back.
+  private func save() {
+    do { try book.remember().save() } catch {
+      state.status = "Couldn't save routes to \(RouteMemory.defaultURL.path): \(error)"
+    }
   }
 
   private func route(_ appKey: String, to uid: String) {
     guard let device = devices.first(where: { $0.uid == uid }) else { return }
     book.connect(appKey, to: uid)
     let failure = book.reconcile(apps: apps, devices: devices)
+    save()
     let name = name(of: appKey)
     state.status =
       failure
@@ -126,13 +137,15 @@ final class Controller {
 
   private func unroute(_ appKey: String, reason: String) {
     guard book.target(of: appKey) != nil else { return }
+    let name = name(of: appKey)
     book.disconnect(appKey)
-    state.status = "\(name(of: appKey)) \(reason)"
+    save()
+    state.status = "\(name) \(reason)"
     refresh()
   }
 
   private func name(of appKey: String) -> String {
-    apps.first { $0.key == appKey }?.name ?? appKey
+    apps.first { $0.key == appKey }?.name ?? book.routedApps[appKey] ?? appKey
   }
 
   /// Re-reads apps and devices, keeps each route pointed at what it should be,
@@ -145,7 +158,7 @@ final class Controller {
       let processes = try AudioProcess.all().filter { $0.pid != getpid() }
       apps = AppGrouping.apps(
         from: processes, name: AppNames.name(forKey:process:), host: AppNames.hostKey(for:),
-        pinned: pinned)
+        pinned: pinned.merging(book.routedApps) { fixed, _ in fixed })
       devices = try OutputDevice.all()
     } catch {
       state.status = "Couldn't read audio state: \(error)"
@@ -153,12 +166,14 @@ final class Controller {
     if let message = book.reconcile(apps: apps, devices: devices) { state.status = message }
     if tick, let advice = book.measure(apps: apps, host: host) { state.status = advice }
 
+    let present = Set(devices.map(\.uid))
     let rows = apps.filter(isVisible).map { app in
-      let volume = book.target(of: app.key) == nil ? nil : book.volume(for: app.key)
+      let target = book.target(of: app.key)
+      let volume = target == nil ? nil : book.volume(for: app.key)
       return AppRow(
-        key: app.key, name: app.name, isPlaying: app.isPlaying,
-        routedUID: book.target(of: app.key), level: book.level(of: app.key),
-        isSilent: book.isSilent(app.key), isWaiting: book.isWaiting(app.key),
+        key: app.key, name: app.name, isPlaying: app.isPlaying, routedUID: target,
+        level: book.level(of: app.key), isSilent: book.isSilent(app.key),
+        isWaiting: book.isWaiting(app.key), isAway: target.map { !present.contains($0) } ?? false,
         volume: (volume?.perMille ?? Volume.full) / 10, isMuted: volume?.isMuted ?? false)
     }
     let deviceRows = zip(devices, DeviceLabels.labels(for: devices)).map { device, label in

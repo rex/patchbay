@@ -30,6 +30,25 @@ version bumps).
 
 ---
 
+## [0.8.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- Remembered routes. Every route change (connect, disconnect, volume, mute)
+  saves `~/Library/Application Support/patchbay/routes.json`, or
+  `$PATCHBAY_ROUTES_FILE`, and launch restores it, so routes and their
+  volumes come back after a restart. Verified live across two launches.
+- `RouteMemory`: a Codable file with app and output IDs and names, volume
+  and mute. A missing or broken file means no routes. Apps known only by
+  process ID aren't saved.
+- A route's meter reads `away` while its output is disconnected.
+
+### Changed
+- A route now lasts until it is disconnected. When its app isn't running,
+  the app stays listed and the route waits. When its output is away, the
+  app plays normally and the route resumes when the output returns. Before,
+  both cases dropped the route.
+- `RouteBook` moved into `PatchbayCore` (now public) so it can be tested;
+  it gained `remember()` and `restore(_:)`.
+
 ## [0.7.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - `make install-command` builds the release binary and installs `patchbay`

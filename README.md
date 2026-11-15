@@ -31,6 +31,18 @@ anything macOS runs on an app's behalf (named like "QuickLookUIService
 anything; its meter reads `ready`, and the route goes live the moment a
 preview starts. A route keeps up as an app's helper processes come and go.
 
+**Routes are remembered.** Quit and reopen patchbay and your routes come back,
+volumes and mutes included. A route stays until you disconnect it (`d` or
+"↩ Normal output"):
+- if its app isn't running, the app stays listed and the route starts when it
+  plays;
+- if its output is away (AirPods in the case, say), the meter reads `away`,
+  the app plays normally, and the route resumes when the output reconnects.
+
+They're saved in `~/Library/Application Support/patchbay/routes.json`, which
+is plain JSON you can edit or delete. `PATCHBAY_ROUTES_FILE` points patchbay at
+a different file.
+
 There are also scriptable forms:
 
 ```sh
