@@ -15,6 +15,11 @@ final class Controller {
   private var sources: [any DispatchSourceProtocol] = []
   /// The last screen drawn, so a click can be matched to what was under it.
   private var frame: Frame?
+  /// Per route: last second's peak, and whether it has gone suspiciously silent.
+  private var levels: [String: Float] = [:]
+  private var watches: [String: SilenceWatch] = [:]
+  /// The terminal app whose audio-recording permission the taps depend on.
+  private let host = HostApp.name()
 
   func run() throws -> Never {
     try terminal.enter()
@@ -27,7 +32,7 @@ final class Controller {
     timer.schedule(deadline: .now() + 1, repeating: 1)
     timer.setEventHandler { [weak self] in
       MainActor.assumeIsolated {
-        self?.refresh()
+        self?.refresh(tick: true)
         self?.draw()
       }
     }
@@ -75,6 +80,7 @@ final class Controller {
       let device = devices.first(where: { $0.uid == uid })
     else { return }
     routes.removeValue(forKey: appKey)?.stop()
+    watches[appKey] = nil
     do {
       routes[appKey] = try Route(app: app, device: device)
       state.status = "\(app.name) → \(device.name)"
@@ -93,7 +99,10 @@ final class Controller {
 
   /// Re-reads apps and devices, keeps each route pointed at what it should be,
   /// and rebuilds the rows. Runs every second and after every route change.
-  private func refresh() {
+  ///
+  /// `tick` marks the once-a-second call: only then are meters read and silence
+  /// counted, so a refresh after a click doesn't count as a second of silence.
+  private func refresh(tick: Bool = false) {
     do {
       apps = AppGrouping.apps(from: try AudioProcess.all(), name: AppNames.name(forKey:process:))
         .filter { app in !app.processes.contains { $0.pid == getpid() } }
@@ -102,12 +111,13 @@ final class Controller {
       state.status = "Couldn't read audio state: \(error)"
     }
     reconcileRoutes()
+    if tick { measureRoutes() }
 
     let rows = apps.filter(isVisible).map { app in
-      let route = routes[app.key]
-      return AppRow(
-        key: app.key, name: app.name, isPlaying: app.isPlaying, routedUID: route?.device.uid,
-        level: route?.stats.take().peak ?? 0)
+      AppRow(
+        key: app.key, name: app.name, isPlaying: app.isPlaying,
+        routedUID: routes[app.key]?.device.uid, level: levels[app.key] ?? 0,
+        isSilent: watches[app.key]?.isSilent ?? false)
     }
     let deviceRows = zip(devices, DeviceLabels.labels(for: devices)).map { device, label in
       DeviceRow(uid: device.uid, label: label, detail: DeviceLabels.detail(for: device))
@@ -133,7 +143,23 @@ final class Controller {
       let before = Set(route.app.processes.map(\.objectID))
       if before != Set(app.processes.map(\.objectID)) {
         route.stop()
+        watches[key] = nil
         routes[key] = try? Route(app: app, device: route.device)
+      }
+    }
+  }
+
+  /// Reads each route's meter for the last second, and warns once when a route of
+  /// a playing app has carried nothing but silence (see `SilenceWatch`).
+  private func measureRoutes() {
+    levels = levels.filter { routes[$0.key] != nil }
+    watches = watches.filter { routes[$0.key] != nil }
+    for (key, route) in routes {
+      let peak = route.stats.take().peak
+      levels[key] = peak
+      let playing = apps.first { $0.key == key }?.isPlaying ?? false
+      if watches[key, default: SilenceWatch()].observe(peak: peak, appIsPlaying: playing) {
+        state.status = SilenceWatch.advice(appName: route.app.name, host: host)
       }
     }
   }

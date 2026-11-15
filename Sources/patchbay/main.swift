@@ -50,6 +50,8 @@ func route(_ appQuery: String, _ deviceQuery: String, seconds: Int?) throws {
   interrupt.resume()
 
   var elapsed = 0
+  var watch = SilenceWatch()
+  let tapped = Set(app.processes.map(\.objectID))
   let timer = DispatchSource.makeTimerSource(queue: .main)
   timer.schedule(deadline: .now() + 1, repeating: 1)
   timer.setEventHandler {
@@ -59,6 +61,12 @@ func route(_ appQuery: String, _ deviceQuery: String, seconds: Int?) throws {
       String(
         format: "  %3ds  io cycles %6d  tap ch %d  peak %.3f  buffered %5d frames",
         elapsed, cycles, channels, peak, route.bufferedFrames))
+    let playing = ((try? AudioProcess.all()) ?? []).contains {
+      tapped.contains($0.objectID) && $0.isRunningOutput
+    }
+    if watch.observe(peak: peak, appIsPlaying: playing) {
+      print("  ⚠ " + SilenceWatch.advice(appName: app.name, host: HostApp.name()))
+    }
     if let seconds, elapsed >= seconds {
       route.stop()
       exit(0)

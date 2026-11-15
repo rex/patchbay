@@ -7,15 +7,20 @@ public struct AppRow: Equatable, Sendable {
   public let routedUID: String?
   /// Loudest recent sample on the route, 0...1, for the level meter.
   public let level: Float
+  /// The app is playing but its route has carried only silence for a while,
+  /// usually because the terminal lacks the audio-recording permission.
+  public let isSilent: Bool
 
   public init(
-    key: String, name: String, isPlaying: Bool, routedUID: String? = nil, level: Float = 0
+    key: String, name: String, isPlaying: Bool, routedUID: String? = nil, level: Float = 0,
+    isSilent: Bool = false
   ) {
     self.key = key
     self.name = name
     self.isPlaying = isPlaying
     self.routedUID = routedUID
     self.level = level
+    self.isSilent = isSilent
   }
 }
 

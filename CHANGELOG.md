@@ -30,6 +30,18 @@ version bumps).
 
 ---
 
+## [0.4.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- Silent-route warning. When a playing app's route has carried only exact
+  silence for 3 seconds, the TUI swaps its meter for a red `⚠ none` and
+  says in the status line which terminal needs the System Audio Recording
+  permission. `patchbay route` prints the same warning. This is what a
+  missing permission looks like: macOS gives the tap silence instead of an
+  error, and still mutes the app.
+- `SilenceWatch` (pure, tested) and `HostApp`, which finds the `.app` that
+  patchbay runs inside by walking up the process tree.
+- README "If a route is silent" troubleshooting.
+
 ## [0.3.1] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Changed
 - TASK_STATE.md records Pierce's listen test: Chrome's 48 kHz tap plays at

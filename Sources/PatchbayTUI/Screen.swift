@@ -121,7 +121,10 @@ public enum Screen {
     let meterWidth = app.routedUID == nil ? 0 : 6
     let style = Style(color: armed ? armedColor : color, bold: armed || color != nil)
     canvas.put(app.name, row: row, column: 3, limit: width - 4 - meterWidth, style: style)
-    if meterWidth > 0 {
+    if meterWidth > 0, app.isSilent {
+      canvas.put(
+        "⚠ none", row: row, column: width - meterWidth, style: Style(color: 91, bold: true))
+    } else if meterWidth > 0 {
       canvas.put(meter(app.level), row: row, column: width - meterWidth, style: Style(color: color))
     }
   }

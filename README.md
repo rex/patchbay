@@ -56,9 +56,21 @@ outside its own terminal window.
 
 - macOS 15 or later (process taps need 14.2; the ring buffer's atomics need 15)
 - Swift 6 toolchain (Xcode 16 or later, or the Command Line Tools)
-- The **Screen & System Audio Recording** permission for the terminal app you
-  run patchbay from (System Settings → Privacy & Security). macOS asks the
-  first time patchbay creates a tap.
+- The **System Audio Recording** permission for the terminal app you run
+  patchbay from: System Settings → Privacy & Security → Screen & System Audio
+  Recording, under "System Audio Recording Only". It belongs to the terminal
+  (iTerm, Terminal, Ghostty...), not to patchbay, because patchbay is a
+  command-line tool.
+
+### If a route is silent
+
+Without that permission, macOS doesn't refuse the tap. It hands patchbay
+silence and still mutes the app, so the app goes quiet everywhere. When a
+playing app's route carries nothing for 3 seconds, patchbay says so: the
+meter turns into a red `⚠ none` and the status line names the terminal to
+allow. Turn the terminal on in the setting above (add it with **+** if it's
+not listed), quit and reopen the terminal, then start patchbay again. Quitting
+patchbay always gives every app its sound back.
 
 ## Build and run
 

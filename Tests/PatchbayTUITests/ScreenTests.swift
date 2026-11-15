@@ -66,6 +66,18 @@ import Testing
     #expect(DeviceLabels.detail(for: devices[0]) == "48 kHz")
   }
 
+  @Test func aSilentRouteShowsAWarningInsteadOfItsMeter() {
+    var state = TUIState()
+    state.update(
+      apps: [
+        AppRow(key: "a", name: "Google Chrome", isPlaying: true, routedUID: "spk", isSilent: true)
+      ],
+      devices: [DeviceRow(uid: "spk", label: "Speakers")])
+    let row = Screen.render(state, width: 100, height: 10).canvas.text[3]
+    #expect(row.contains("⚠ none"))
+    #expect(!row.contains("▯"))
+  }
+
   @Test func longNamesAreCutWithAnEllipsis() {
     var canvas = Canvas(width: 10, height: 1)
     canvas.put("A very long app name", row: 0, column: 0, limit: 6)
