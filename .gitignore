@@ -1,0 +1,16 @@
+# Tooling
+.task_state_history/
+
+# SwiftPM / Xcode
+.build/
+.swiftpm/
+*.xcodeproj/
+xcuserdata/
+
+# macOS
+.DS_Store
+
+# Local env (never committed)
+.env
+.env.*
+!.env.example

@@ -1,0 +1,142 @@
+# VIBE.yaml — durable repo policy.
+#
+# Schema:    agentic-skeleton/references/vibe-yaml-schema.md
+# Defaults:  agentic-skeleton/templates/greenfield/vibe-defaults.yaml
+# Validator: scripts/validate_vibe_yaml.py  (hard-requires check-jsonschema)
+#
+# Edit this file when durable repo policy changes. Anything you OMIT is
+# hydrated from defaults — leave a key out only when "use the default" is
+# the right call. Set to `null` only as an explicit opt-out.
+#
+# Composable skills (lang-python, lang-react, lang-docker, tool-ci, etc.)
+# add their own top-level keys via fragments — those go BELOW the skeleton
+# sections, one block per namespace.
+
+kind: vibe-policy
+schema_version: 1
+
+project:
+  name: patchbay
+  # greenfield = new repo still scaffolding; brownfield = existing repo
+  lifecycle: greenfield
+  # Short stable id for the dominant stack (e.g. python-fastapi,
+  # nextjs-prisma, react-vite, node-cli). Composable skills key off this.
+  stack: swift-cli
+
+  # Append-only decision log. Use IDs that survive across docs.
+  # Uncomment + edit the entry below when you record your first decision.
+  # Example shape:
+  #   decisions:
+  #     - id: D1
+  #       date: "2026-04-23"
+  #       decided_by: <author>
+  #       summary: <one-line decision>
+  #       rationale: <why this won't be obvious in 6 months>
+  #       status: locked   # locked | revisit | superseded
+  decisions:
+    - id: D1
+      date: "2026-11-15"
+      decided_by: Pierce
+      summary: A terminal UI, not a CLI of flags or a menu-bar app.
+      rationale: Nobody should have to remember Core Audio device names; pick
+        from live lists.
+      status: locked
+    - id: D2
+      date: "2026-11-15"
+      decided_by: Pierce
+      summary: Route with Core Audio process taps (macOS 14.2+); never install a
+        keyboard or event tap.
+      rationale: Audio Router 1.2.0's main-thread media-key tap jammed system
+        keyboard input until a reboot (jkjoplin/AudioRouter#1).
+      status: locked
+    - id: D3
+      date: "2026-11-15"
+      decided_by: Pierce
+      summary: Public repo; no secrets in it, ever.
+      rationale: Pre-commit gitleaks + detect-secrets, CI gitleaks over full
+        history, GitHub push protection.
+      status: locked
+
+workflow:
+  # interactive = ask before each non-trivial step (default)
+  # continue-until-blocked = run autonomously until hitting a stop condition
+  default_autonomy_mode: interactive
+  validation_command: make validate
+  final_verification_command: make
+    check-if-the-agent-can-consider-this-task-completed
+  # Set false for repos that already have a Dockerfile and are
+  # actively iterating on it.
+  ask_before_dockerizing: true
+
+quality_gates:
+  lint:
+    required: true
+    command: make lint
+  typecheck:
+    required: true
+    command: make typecheck
+  tests:
+    # required = active gate; deferred = intentionally not yet;
+    # not_applicable = work where tests don't apply (docs repos, etc.)
+    mode: deferred
+    command:
+    required_suites: []
+    coverage:
+      enabled: false
+      minimum_percentage:
+  clean_worktree_required_on_completion: true
+
+architecture:
+  check_command: make check-architecture
+  # scope_globs is OMITTED on purpose — the architecture gate is OPT-OUT.
+  # With no scope_globs it scans every source file in the repo, minus
+  # exclude_globs. Add scope_globs ONLY to narrow the scan; a scope_globs
+  # that matches zero files FAILS the gate (a silently-empty allowlist is
+  # how oversized files used to escape enforcement entirely).
+  exclude_globs:
+    - "**/*.generated.*"
+    - "**/node_modules/**"
+  max_lines_per_file:
+    soft: 250    # warning only — refactor trigger
+    hard: 400    # blocking failure
+  # Fail the architecture gate when a module exposes more than this many
+  # public top-level entry points (functions, classes). null = opt out.
+  max_public_functions_per_module: 8
+
+docs:
+  agents_md_required: true
+  claude_md_required: true
+  task_state_required: true
+  vibe_yaml_required: true
+
+reporting:
+  completion_report:
+    required: true
+    format: markdown-table
+    detail_level: compact
+
+security:
+  # forbidden = pre-commit hooks reject any committed secret.
+  # allowed-with-warning = only if the repo intentionally checks in
+  # encrypted secrets (SOPS / age / sealed-secrets).
+  secrets_in_files: forbidden  # pragma: allowlist secret
+
+versioning:
+  enabled: true
+  # semver | calver | none
+  style: semver
+  file: VERSION
+  initial: "0.1.0"
+  bump_required_per_commit: true
+  changelog_path: CHANGELOG.md
+  tag_prefix: "v"
+
+# Applied-skill provenance — which skills shaped this repo, at what version.
+# Written at apply time by `make stamp-skill SKILL=<id>`; agentic-skeleton
+# stamps itself on `make sync-skeleton`. Verified advisorily by
+# `make check-skills`. Don't hand-edit entries — re-stamp instead.
+skills:
+  - id: agentic-skeleton
+    version: "0.52.0"
+    applied: '2026-11-15'
+    source: sync
