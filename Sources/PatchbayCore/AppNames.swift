@@ -3,6 +3,9 @@ import AppKit
 /// Display names for grouping keys, from the running app or its bundle on disk.
 public enum AppNames {
   public static func name(forKey key: String, process: AudioProcess) -> String {
+    // WebKit plays every web view's audio (Safari, Mail, any WKWebView app) from one
+    // shared GPU process, so naming it after whichever app owns it first misleads.
+    if key == "com.apple.WebKit.GPU" { return "Safari & other web views" }
     if !key.hasPrefix("pid:") {
       if let app = NSRunningApplication.runningApplications(withBundleIdentifier: key).first,
         let name = app.localizedName
@@ -19,6 +22,13 @@ public enum AppNames {
       return name
     }
     return executableName(pid: process.pid) ?? key
+  }
+
+  /// True when `key` belongs to a running app with a Dock icon, as opposed to a
+  /// daemon, agent or extension. Those are what a person expects to pick from.
+  public static func isRegularApp(key: String) -> Bool {
+    NSRunningApplication.runningApplications(withBundleIdentifier: key)
+      .contains { $0.activationPolicy == .regular }
   }
 
   /// `afplay`, `say` and other bundle-less tools: the executable's short name.

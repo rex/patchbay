@@ -10,7 +10,9 @@ let package = Package(
   ],
   targets: [
     .target(name: "PatchbayCore"),
-    .executableTarget(name: "patchbay", dependencies: ["PatchbayCore"]),
+    .target(name: "PatchbayTUI", dependencies: ["PatchbayCore"]),
+    .executableTarget(name: "patchbay", dependencies: ["PatchbayCore", "PatchbayTUI"]),
     .testTarget(name: "PatchbayCoreTests", dependencies: ["PatchbayCore"]),
+    .testTarget(name: "PatchbayTUITests", dependencies: ["PatchbayTUI", "PatchbayCore"]),
   ]
 )

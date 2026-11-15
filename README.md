@@ -4,8 +4,22 @@ A terminal UI for sending each Mac app's audio to the output device you pick.
 Chrome to the speakers and Finder previews to your AirPods, at the same time,
 picked from live lists so you never type a device name.
 
-**Status:** early. The routing engine works from the command line; the TUI is
-next.
+**Status:** early, and it works. Run `patchbay` for the patch panel:
+
+```
+ SOURCES                                    OUTPUTS
+ ▶ afplay           ▮▯▯▯▯ ●──────┐          ↩ Normal output
+ ▶ Google Chrome                 │          Scarlett 2i2 USB    44.1 kHz · default
+   Finder                        └────────● BlackHole 2ch                  48 kHz
+```
+
+Click a source on the left, then an output on the right; a cable appears and
+the app plays there. Pick **↩ Normal output** (or press `d`) to disconnect. The
+keyboard does everything too: ↑↓ to move, ⏎ to pick, Esc to cancel, `a` to show
+every app instead of just the playing ones and real apps, `q` to quit. Quitting
+disconnects everything. Clicks reach patchbay only from its own terminal window.
+
+There are also scriptable forms:
 
 ```sh
 patchbay list                       # output devices and apps (▶ = playing now)

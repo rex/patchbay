@@ -1,0 +1,166 @@
+import Darwin
+import Dispatch
+import PatchbayCore
+import PatchbayTUI
+
+/// The interactive app: keeps the lists live, turns commands into routes, and
+/// tears every route down on the way out.
+@MainActor
+final class Controller {
+  private let terminal = Terminal()
+  private var state = TUIState()
+  private var routes: [String: Route] = [:]
+  private var apps: [AudioApp] = []
+  private var devices: [OutputDevice] = []
+  private var sources: [any DispatchSourceProtocol] = []
+  /// The last screen drawn, so a click can be matched to what was under it.
+  private var frame: Frame?
+
+  func run() throws -> Never {
+    try terminal.enter()
+    refresh()
+    draw()
+
+    let input = DispatchSource.makeReadSource(fileDescriptor: STDIN_FILENO, queue: .main)
+    input.setEventHandler { [weak self] in MainActor.assumeIsolated { self?.readInput() } }
+    let timer = DispatchSource.makeTimerSource(queue: .main)
+    timer.schedule(deadline: .now() + 1, repeating: 1)
+    timer.setEventHandler { [weak self] in
+      MainActor.assumeIsolated {
+        self?.refresh()
+        self?.draw()
+      }
+    }
+    sources = [input, timer]
+    for signalNumber in [SIGWINCH, SIGINT, SIGTERM, SIGHUP] {
+      signal(signalNumber, SIG_IGN)
+      let source = DispatchSource.makeSignalSource(signal: signalNumber, queue: .main)
+      source.setEventHandler { [weak self] in
+        MainActor.assumeIsolated {
+          if signalNumber == SIGWINCH { self?.draw() } else { self?.quit() }
+        }
+      }
+      sources.append(source)
+    }
+    for source in sources { source.resume() }
+    dispatchMain()
+  }
+
+  private func readInput() {
+    guard let bytes = terminal.readBytes() else { quit() }
+    for key in Key.parse(bytes) {
+      guard let command = command(for: key) else { continue }
+      switch command {
+      case .quit: quit()
+      case .toggleAll: refresh()
+      case .route(let appKey, let uid): route(appKey, to: uid)
+      case .unroute(let appKey): unroute(appKey, reason: "is back on its normal output")
+      }
+    }
+    draw()
+  }
+
+  /// Clicks go to whatever was drawn under them; everything else to the state.
+  private func command(for key: Key) -> Command? {
+    guard case .click(let x, let y) = key else { return state.handle(key) }
+    switch frame?.target(x: x, y: y) {
+    case .source(let index): return state.pickSource(index)
+    case .output(let index): return state.pickOutput(index)
+    case nil: return nil
+    }
+  }
+
+  private func route(_ appKey: String, to uid: String) {
+    guard let app = apps.first(where: { $0.key == appKey }),
+      let device = devices.first(where: { $0.uid == uid })
+    else { return }
+    routes.removeValue(forKey: appKey)?.stop()
+    do {
+      routes[appKey] = try Route(app: app, device: device)
+      state.status = "\(app.name) → \(device.name)"
+    } catch {
+      state.status = "Couldn't route \(app.name): \(error)"
+    }
+    refresh()
+  }
+
+  private func unroute(_ appKey: String, reason: String) {
+    guard let route = routes.removeValue(forKey: appKey) else { return }
+    route.stop()
+    state.status = "\(route.app.name) \(reason)"
+    refresh()
+  }
+
+  /// Re-reads apps and devices, keeps each route pointed at what it should be,
+  /// and rebuilds the rows. Runs every second and after every route change.
+  private func refresh() {
+    do {
+      apps = AppGrouping.apps(from: try AudioProcess.all(), name: AppNames.name(forKey:process:))
+        .filter { app in !app.processes.contains { $0.pid == getpid() } }
+      devices = try OutputDevice.all()
+    } catch {
+      state.status = "Couldn't read audio state: \(error)"
+    }
+    reconcileRoutes()
+
+    let rows = apps.filter(isVisible).map { app in
+      let route = routes[app.key]
+      return AppRow(
+        key: app.key, name: app.name, isPlaying: app.isPlaying, routedUID: route?.device.uid,
+        level: route?.stats.take().peak ?? 0)
+    }
+    let deviceRows = zip(devices, DeviceLabels.labels(for: devices)).map { device, label in
+      DeviceRow(uid: device.uid, label: label, detail: DeviceLabels.detail(for: device))
+    }
+    state.update(apps: rows, devices: deviceRows)
+  }
+
+  /// Drops routes whose app or device went away, and rebuilds a route when its app
+  /// gains or loses processes (a browser starting a new audio helper, say).
+  private func reconcileRoutes() {
+    for (key, route) in routes {
+      guard devices.contains(where: { $0.uid == route.device.uid }) else {
+        unrouteQuietly(
+          key,
+          status:
+            "\(route.device.name) disconnected; \(route.app.name) is back on its normal output")
+        continue
+      }
+      guard let app = apps.first(where: { $0.key == key }) else {
+        unrouteQuietly(key, status: "\(route.app.name) quit")
+        continue
+      }
+      let before = Set(route.app.processes.map(\.objectID))
+      if before != Set(app.processes.map(\.objectID)) {
+        route.stop()
+        routes[key] = try? Route(app: app, device: route.device)
+      }
+    }
+  }
+
+  private func unrouteQuietly(_ key: String, status: String) {
+    routes.removeValue(forKey: key)?.stop()
+    state.status = status
+  }
+
+  /// Playing, routed, or a real app with a Dock icon. `a` shows everything.
+  private func isVisible(_ app: AudioApp) -> Bool {
+    state.showAll || app.isPlaying || routes[app.key] != nil || AppNames.isRegularApp(key: app.key)
+  }
+
+  private func draw() {
+    let size = terminal.size
+    let frame = Screen.render(state, width: size.width, height: size.height)
+    self.frame = frame
+    terminal.draw(frame.canvas)
+  }
+
+  /// Stops every route (each app goes back to its normal output), restores the terminal.
+  private func quit() -> Never {
+    for source in sources { source.cancel() }
+    for route in routes.values { route.stop() }
+    routes.removeAll()
+    terminal.restore()
+    exit(0)
+  }
+}

@@ -7,10 +7,13 @@
 
 | Target | Purpose | Entry point |
 |---|---|---|
-| `patchbay` (executable) | The TUI and command line | `Sources/patchbay/main.swift` |
+| `PatchbayCore` | Routing engine: discovery, taps, ring buffer, output units | `Route.swift` |
+| `PatchbayTUI` | Pure patch-panel logic: keys and clicks, state, layout, cables | `TUIState.swift`, `Screen.swift` |
+| `patchbay` (executable) | Terminal I/O and route lifecycle for the TUI, plus `list` / `route` | `main.swift`, `Controller.swift` |
 
-The routing engine lands as its own library target so the TUI stays a thin
-layer and the pure parts can be tested without Core Audio permissions.
+`PatchbayTUI` has no Core Audio or terminal calls, so its tests render whole
+screens and drive clicks without permissions. The executable is the only place
+raw mode, mouse reporting and `Route` objects meet.
 
 ## Where bodies are buried
 

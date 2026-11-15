@@ -1,5 +1,5 @@
 // patchbay: send each app's audio to the output device you pick.
-// `patchbay list` prints what can be routed; the TUI comes next (see TASK_STATE.md).
+// `patchbay` opens the patch panel; `list` and `route` are the scriptable forms.
 import Foundation
 import PatchbayCore
 
@@ -76,13 +76,15 @@ struct CLIError: Error, CustomStringConvertible {
 let arguments = Array(CommandLine.arguments.dropFirst())
 do {
   switch arguments.first {
+  case nil:
+    try Controller().run()
   case "list":
     try list()
   case "route" where arguments.count >= 3:
     try route(arguments[1], arguments[2], seconds: arguments.count > 3 ? Int(arguments[3]) : nil)
   default:
-    print("usage: patchbay list\n       patchbay route <app> <device> [seconds]")
-    exit(arguments.isEmpty ? 0 : 64)
+    print("usage: patchbay\n       patchbay list\n       patchbay route <app> <device> [seconds]")
+    exit(arguments.first == "help" || arguments.first == "--help" ? 0 : 64)
   }
 } catch {
   FileHandle.standardError.write(Data("patchbay: \(error)\n".utf8))

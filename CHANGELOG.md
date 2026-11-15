@@ -30,6 +30,26 @@ version bumps).
 
 ---
 
+## [0.3.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- The patch panel: `patchbay` with no arguments opens a full-screen TUI with
+  sources (apps) on the left and outputs on the right. Click a source, then
+  an output, and a colored cable is drawn between them while the route runs.
+  "↩ Normal output" or `d` disconnects. The keyboard does everything too
+  (↑↓ ⏎ Esc Tab, `a` for every app, `q` to quit). Quitting stops every route
+  and restores the terminal.
+- Live upkeep every second: lists refresh, each route shows a level meter, a
+  route is rebuilt when its app gains or loses audio processes (a new browser
+  helper), and is dropped when its app quits or its device disconnects.
+- `PatchbayTUI` target: key and SGR-mouse parsing, the panel state, a styled
+  canvas, cable drawing with merged crossings, and numbered labels for
+  devices that share a name. 22 new tests.
+- `AppNames.isRegularApp`. Idle daemons are hidden unless you press `a`, and
+  WebKit's shared audio process is named "Safari & other web views".
+
+### Changed
+- `patchbay` with no arguments opens the TUI instead of printing usage.
+
 ## [0.2.1] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - MIT license (`LICENSE`, plus a License section in the README), Pierce's

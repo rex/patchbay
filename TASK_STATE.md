@@ -8,10 +8,10 @@
 
 ## 0. TL;DR for a fresh agent session
 
-The routing engine works from the command line (`patchbay list`,
-`patchbay route <app> <device>`). **Next action:** Pierce listen-tests a route
-(pitch, glitches, AirPods staying in high quality), then the TUI (Phase 2,
-#5) goes on top. Never add an event tap.
+`patchbay` opens the patch panel: sources left, outputs right, click one then
+the other and a cable is drawn. **Next action:** Pierce uses it for real
+(pitch at 48→44.1 kHz, glitches over minutes, two routes at once, AirPods
+staying in high quality), which also closes out #4. Never add an event tap.
 
 ## Standing user directives
 
@@ -25,7 +25,7 @@ The routing engine works from the command line (`patchbay list`,
 |---|---|---|---|
 | 0 | Name, repo, scaffold, Rivendell (#2, #3) | ✅ done | rex/patchbay public, gates green, issues on the board |
 | 1 | Routing engine (#4) | 🟡 in-prog: built, awaiting listen test | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
-| 2 | TUI (#5) | ⏸ pending | Live app and device lists; add, retarget and remove routes; quitting restores everything |
+| 2 | TUI (#5) | ✅ done | Live app and device lists; add, retarget and remove routes; quitting restores everything |
 
 Parent issue: #1. Issues #1–#5 came over from rex/todo#16–#20.
 

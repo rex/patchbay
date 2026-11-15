@@ -34,7 +34,7 @@ tap don't belong in `swift test`.
 ## 4. Repo layout
 
 ```
-Sources/       Swift targets (patchbay executable; engine library as it lands)
+Sources/       PatchbayCore (engine), PatchbayTUI (pure UI logic), patchbay (executable)
 Tests/         Swift Testing suites, mirroring Sources/
 specs/         Spec-driven dev artifacts — read specs/<active>/ first
 docs/adr/      Architectural decisions (MADR) — read README.md index
