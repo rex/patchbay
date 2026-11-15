@@ -30,6 +30,12 @@ version bumps).
 
 ---
 
+## [0.1.1] — 2026-11-15 — Agent: Claude Opus 5.5
+### Changed
+- TASK_STATE.md maps each phase to its issue (#1–#5, moved here from
+  rex/todo). The repo is linked to Rivendell, which closes the naming and
+  repo-setup issues.
+
 ## [0.1.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - Scaffold from `agentic-skeleton`: AGENTS.md (CLAUDE.md and GEMINI.md

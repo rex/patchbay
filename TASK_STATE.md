@@ -23,9 +23,11 @@ add an event tap.
 
 | # | Phase | Status | Exit criteria |
 |---|---|---|---|
-| 0 | Name, repo, scaffold, Rivendell | ✅ done | rex/patchbay public, gates green, issues on the board |
-| 1 | Routing engine | ⏸ pending | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
-| 2 | TUI | ⏸ pending | Live app and device lists; add, retarget and remove routes; quitting restores everything |
+| 0 | Name, repo, scaffold, Rivendell (#2, #3) | ✅ done | rex/patchbay public, gates green, issues on the board |
+| 1 | Routing engine (#4) | ⏸ pending | `patchbay route <app> <device>` plays that app on that device until Ctrl-C; several routes at once; mismatched sample rates handled |
+| 2 | TUI (#5) | ⏸ pending | Live app and device lists; add, retarget and remove routes; quitting restores everything |
+
+Parent issue: #1. Issues #1–#5 came over from rex/todo#16–#20.
 
 Statuses: `⏸ pending` · `🟡 in-prog` · `✅ done` · `🔴 blocked`
 
