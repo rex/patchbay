@@ -30,6 +30,11 @@ version bumps).
 
 ---
 
+## [0.2.1] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- MIT license (`LICENSE`, plus a License section in the README), Pierce's
+  choice for the public repo.
+
 ## [0.2.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - `PatchbayCore`, the routing engine. `OutputDevice.all()` lists output

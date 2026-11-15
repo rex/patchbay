@@ -71,3 +71,7 @@ detect-secrets on every commit, CI runs gitleaks over the full history, and
 GitHub secret scanning with push protection is on.
 
 Repo policy lives in `VIBE.yaml`; agent instructions live in `AGENTS.md`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
