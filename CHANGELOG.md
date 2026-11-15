@@ -30,6 +30,13 @@ version bumps).
 
 ---
 
+## [0.7.0] — 2026-11-15 — Agent: Claude Opus 5.5
+### Added
+- `make install-command` builds the release binary and installs `patchbay`
+  to `$(PREFIX)/bin` (default `~/.local/bin`), warning if that isn't on PATH.
+  `make uninstall-command` removes it. Installed and run from PATH on this
+  Mac.
+
 ## [0.6.1] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Changed
 - TASK_STATE.md: new standing directive from Pierce to work directly on

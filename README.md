@@ -87,10 +87,14 @@ patchbay always gives every app its sound back.
 ## Build and run
 
 ```sh
-make setup   # resolve packages and compile
-make dev     # swift run patchbay
-make build   # release binary at .build/release/patchbay
+make setup             # resolve packages and compile
+make install-command   # build and install `patchbay` to ~/.local/bin
+patchbay               # from anywhere
 ```
+
+Rerun `make install-command` after pulling changes. `PREFIX=/opt/homebrew make
+install-command` puts it somewhere else; `make uninstall-command` removes it.
+`make dev` runs it straight from source.
 
 ## Development
 

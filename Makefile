@@ -7,7 +7,8 @@
 # Run `make help` for a full list of available targets.
 
 .PHONY: help help-stack install env env-check setup validate update info \
-        dev build start lint typecheck check-architecture check-docs \
+        dev build install-command uninstall-command start lint typecheck \
+        check-architecture check-docs \
         check-precommit check-skeleton sync-skeleton check-skills stamp-skill fix test \
         bump-patch bump-minor bump-major check-version-bumped version \
         clean clean-all \
@@ -26,6 +27,8 @@ SHELL       := $(or $(wildcard /opt/homebrew/bin/zsh),$(shell command -v zsh),/b
 APP_NAME    ?= patchbay
 # Swift sources the formatter lints and fixes (only the ones that exist).
 SWIFT_PATHS := $(wildcard Package.swift Sources Tests)
+# Where `make install-command` puts the `patchbay` command.
+PREFIX      ?= $(HOME)/.local
 PORT        ?= 8000
 NODE_ENV    ?= development
 DOCKER_IMAGE := $(APP_NAME):latest
@@ -55,6 +58,8 @@ help:
 	@echo "$(BOLD)Development$(RESET)"
 	@echo "  $(GREEN)make dev$(RESET)                  Run patchbay from source"
 	@echo "  $(GREEN)make build$(RESET)                Build the release binary"
+	@echo "  $(GREEN)make install-command$(RESET)      Install \`patchbay\` to $(PREFIX)/bin (rerun after pulling)"
+	@echo "  $(GREEN)make uninstall-command$(RESET)    Remove it again"
 	@echo "  $(GREEN)make start$(RESET)                Start production server"
 	@echo "  $(GREEN)make lint$(RESET)                 Run linter"
 	@echo "  $(GREEN)make typecheck$(RESET)            Run type checker"
@@ -166,6 +171,20 @@ dev:
 build:
 	@echo "$(CYAN)Building release binary...$(RESET)"
 	@swift build -c release
+
+## install-command: Build and install the `patchbay` command to $(PREFIX)/bin
+install-command: build
+	@mkdir -p "$(PREFIX)/bin"
+	@install -m 755 .build/release/patchbay "$(PREFIX)/bin/patchbay"
+	@echo "$(GREEN)Installed $(PREFIX)/bin/patchbay$(RESET)"
+	@case ":$$PATH:" in *":$(PREFIX)/bin:"*) ;; \
+		*) echo "$(YELLOW)  $(PREFIX)/bin is not on your PATH; add it to run \`patchbay\` anywhere.$(RESET)" ;; \
+	esac
+
+## uninstall-command: Remove the installed `patchbay` command
+uninstall-command:
+	@rm -f "$(PREFIX)/bin/patchbay"
+	@echo "$(GREEN)Removed $(PREFIX)/bin/patchbay$(RESET)"
 
 ## start: Start production server
 start:
