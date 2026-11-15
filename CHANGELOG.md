@@ -30,6 +30,12 @@ version bumps).
 
 ---
 
+## [0.3.1] — 2026-11-15 — Agent: Claude Opus 5.5
+### Changed
+- TASK_STATE.md records Pierce's listen test: Chrome's 48 kHz tap plays at
+  the right pitch on the 44.1 kHz Scarlett, and two routes run at once. The
+  routing engine phase is done. AirPods themselves are still untried.
+
 ## [0.3.0] — 2026-11-15 — Agent: Claude Opus 5.5
 ### Added
 - The patch panel: `patchbay` with no arguments opens a full-screen TUI with
