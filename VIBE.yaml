@@ -139,6 +139,6 @@ versioning:
 # `make check-skills`. Don't hand-edit entries — re-stamp instead.
 skills:
   - id: agentic-skeleton
-    version: "0.52.0"
-    applied: '2026-11-15'
+    version: "0.54.0"
+    applied: '2026-11-17'
     source: sync
